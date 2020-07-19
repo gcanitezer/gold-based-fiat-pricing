@@ -28,10 +28,10 @@ def handler(event, context):
 
     # Check if exists
     if check_file(bucket_name, file_path):
-        print "File {} exists.".format(file_path)
+        print ("File {} exists.".format(file_path))
         return True
     else:
-        print "File {} does not exist.".format(file_path)
+        print ("File {} does not exist.".format(file_path))
         return False
 
 # Manual invocation of the script (only used for testing)
