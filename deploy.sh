@@ -15,7 +15,7 @@ if [ -f $SCRIPT_DIR/check_file_lambda.zip ]; then
 fi
 
 # Add virtualenv libs in new zip file
-cd $VIRTUAL_ENV_DIR/lib/python3.7/site-packages
+cd $VIRTUAL_ENV_DIR/lib/python3.8/site-packages
 zip -r9 $SCRIPT_DIR/check_file_lambda.zip *
 cd $SCRIPT_DIR
 

@@ -115,7 +115,7 @@ resource "aws_lambda_function" "get_data_with_lambda" {
     function_name = "get_data_with_pandas"
     role = aws_iam_role.get_data_with_lambda.arn
     handler = "get_data_with_pandas.lambda_handler"
-    runtime = "python3.7"
+    runtime = "python3.8"
     timeout = 20
     source_code_hash = filebase64sha256("check_file_lambda.zip")
 }
