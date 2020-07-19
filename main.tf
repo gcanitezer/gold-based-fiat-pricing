@@ -39,6 +39,25 @@ resource "aws_iam_role" "check_file_lambda" {
 EOF
 }
 
+resource "aws_iam_role" "get_data_with_lambda" {
+    name = "get_data_with_lambda"
+    assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
 data "aws_iam_policy_document" "s3-access-ro" {
     statement {
         actions = [
@@ -67,6 +86,12 @@ resource "aws_iam_role_policy_attachment" "basic-exec-role" {
     policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+
+resource "aws_iam_role_policy_attachment" "basic-exec-role2" {
+    role       = aws_iam_role.get_data_with_lambda.name
+    policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_check_file" {
     statement_id = "AllowExecutionFromCloudWatch"
     action = "lambda:InvokeFunction"
@@ -82,6 +107,16 @@ resource "aws_lambda_function" "check_file_lambda" {
     handler = "check_file_lambda.handler"
     runtime = "python3.8"
     timeout = 10
+    source_code_hash = filebase64sha256("check_file_lambda.zip")
+}
+
+resource "aws_lambda_function" "get_data_with_lambda" {
+    filename = "check_file_lambda.zip"
+    function_name = "get_data_with_pandas"
+    role = aws_iam_role.get_data_with_lambda.arn
+    handler = "get_data_with_pandas.lambda_handler"
+    runtime = "python3.7"
+    timeout = 20
     source_code_hash = filebase64sha256("check_file_lambda.zip")
 }
 

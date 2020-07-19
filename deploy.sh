@@ -20,7 +20,7 @@ zip -r9 $SCRIPT_DIR/check_file_lambda.zip *
 cd $SCRIPT_DIR
 
 # Add python code in zip file
-zip -r9 $SCRIPT_DIR/check_file_lambda.zip check_file_lambda.py
+zip -r9 $SCRIPT_DIR/check_file_lambda.zip *.py
 
 # Run terraform apply
 terraform apply
