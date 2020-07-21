@@ -8,7 +8,7 @@ import json
 tickers = ['AAPL', 'MSFT', '^GSPC']
 
 # We would like all available data from 01/01/2000 until 12/31/2016.
-start_date = '2020-07-10'
+start_date = '2000-01-10'
 end_date = '2020-07-17'
 
 

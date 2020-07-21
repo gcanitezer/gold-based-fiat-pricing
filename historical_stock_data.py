@@ -4,10 +4,12 @@ import pandas as pd
 from pandas_datareader import data
 import boto3
 import botocore
-
+import json
 
 # Checks if the file exists
 def check_file(bucket, key):
+
+    s3 = boto3.resource('s3')
     file_exists = False
     try:
         s3.Object(bucket, key).load()
@@ -23,10 +25,15 @@ def check_file(bucket, key):
 
 def lambda_handler(event, context):
     # We would like all available data from 01/01/2000 until 12/31/2016.
+
+    print(event)
+
     bucket = 'goldstat-stocks'
     key = event['stock']
     start_date = event['startdate']
     end_date = event['enddate']
+
+    print([key, start_date, end_date])
 
     s3 = boto3.resource('s3')
     try:
@@ -51,7 +58,9 @@ def lambda_handler(event, context):
     # How do we align the existing prices in adj_close with our new set of dates?
     # All we need to do is reindex close using all_weekdays as the new index
     gold = gold.reindex(all_weekdays)
-    return gold.to_json(orient='split')
+    outjson = json.loads( gold.to_json(orient='split'))
+
+    return outjson
 
     # new_gold = pd.Series( )
 
