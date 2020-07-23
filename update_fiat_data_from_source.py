@@ -2,14 +2,11 @@ import pandas as pd
 from pandas_datareader import data
 import boto3
 import botocore
-import json
 from datetime import datetime
 
-# Define the instruments to download. We would like to see Apple, Microsoft and the S&P500 index.
-tickers = ['AAPL', 'MSFT', '^GSPC']
 
 # We would like all available data from 01/01/2000 until 12/31/2016.
-start_date = '2000-01-10'
+start_date = '2000-01-01'
 end_date = datetime.today().strftime('%Y-%m-%d')
 
 
@@ -29,36 +26,36 @@ def check_file(bucket, key):
 
 
 def lambda_handler(event, context):
-    # User pandas_reader.data.DataReader to load the desired data. As simple as that.
-    panel_data = data.DataReader('GC=F', 'yahoo', start_date, end_date)
-
-    # Getting just the adjusted closing prices. This will return a Pandas DataFrame
-    # The index in this DataFrame is the major index of the panel_data.
-    close = panel_data['Close']
-
-    gold = pd.Series( panel_data.eval(' 31100 / Close '))
-
-    # Getting all weekdays between 01/01/2000 and 12/31/2016
-    all_weekdays = pd.date_range(start=start_date, end=end_date, freq='B')
-    all_friday = pd.date_range(start=start_date, end=end_date, freq='W-FRI')
-    # How do we align the existing prices in adj_close with our new set of dates?
-    # All we need to do is reindex close using all_weekdays as the new index
-    gold = gold.reindex(all_weekdays)
-    close = close.reindex(all_friday)
-
-    # Reindexing will insert missing values (NaN) for the dates that were not present
-    # in the original set. To cope with this, we can fill the missing by replacing them
-    # with the latest available price for each instrument.
-    gold = gold.fillna(method='ffill')
-    close = close.fillna(method='ffill')
-    print(gold)
-    print(close)
-
+    stock = event['stock']
     # Get Bucket Name
     bucket = event['bucket']
 
     # Get File Path
     key = event['file_path']
+
+    s3 = boto3.resource('s3')
+    goldFile = 'USD'
+
+    #read Gold data to multiply it with the fiat currency in XXXUSD format data.
+    s3obj = s3.Object(bucket, goldFile).get()['Body'].read().decode('UTF-8')
+    gold = pd.read_json(s3obj, orient='split', typ='series')
+
+    # User pandas_reader.data.DataReader to load the desired data. As simple as that.
+    stock_data = data.DataReader(stock, 'yahoo', start_date, end_date)
+
+    # Getting just the adjusted closing prices. This will return a Pandas DataFrame
+    # The index in this DataFrame is the major index of the panel_data.
+    stock_close = pd.Series(stock_data['Close'])
+    all_weekdays = pd.date_range(start=start_date, end=end_date, freq='B')
+    stock_close = stock_close.reindex(all_weekdays).fillna(method='ffill')
+
+
+    stock_gold = gold * stock_close
+    # gold = pd.Series( panel_data.eval(' 31.1 / Close '))
+
+    print(stock_gold)
+
+
 
     s3 = boto3.resource('s3')
     try:
@@ -71,13 +68,12 @@ def lambda_handler(event, context):
     else:
         file_exists = True
     print(file_exists)
-    print(file);
 
-    result = s3.Object(bucket, key).put(Body=(bytes( gold.to_json(orient='split').encode('UTF-8'))),
+    result = s3.Object(bucket, key).put(Body=(bytes(stock_gold.to_json(orient='split').encode('UTF-8'))),
                                         ContentType='application/json')
     # result = s3.Object(bucket, key).put(Body=gold.to_json())
     print(result)
-    print(gold.to_json())
+    print(stock_gold.to_json())
 
     obj = s3.Object(bucket, key).get()['Body'].read().decode('UTF-8')
 
@@ -89,6 +85,6 @@ def lambda_handler(event, context):
 
 if __name__ == "__main__":
     # Test data
-    test = {"bucket": "goldstat-stocks", "file_path": "USD"}
+    test = {'stock':'GBPUSD=X', "bucket": "goldstat-stocks", "file_path": "GBP"}
     # Test function
     lambda_handler(test, None)
