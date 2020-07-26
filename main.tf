@@ -146,6 +146,11 @@ resource "aws_iam_role_policy_attachment" "s3-access-ro" {
     policy_arn = aws_iam_policy.s3-access-ro.arn
 }
 
+resource "aws_iam_role_policy_attachment" "s3-historic-access" {
+    role       = aws_iam_role.lambda_execution_iam_role.name
+    policy_arn = aws_iam_policy.s3-access-ro.arn
+}
+
 resource "aws_iam_role_policy_attachment" "basic-exec-role" {
     role       = aws_iam_role.check_file_lambda.name
     policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
@@ -159,7 +164,7 @@ resource "aws_iam_role_policy_attachment" "basic-exec-role2" {
 
 resource "aws_iam_role_policy_attachment" "basic-exec-role3" {
     role       = aws_iam_role.lambda_execution_iam_role.name
-    policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+    policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_check_file" {
@@ -228,7 +233,7 @@ resource "aws_api_gateway_resource" "enddate" {
    parent_id   = aws_api_gateway_resource.startdate.id
    path_part   = "{enddate}"
 }
-resource "aws_api_gateway_method" "proxy" {
+resource "aws_api_gateway_method" "fiatget" {
    rest_api_id   = aws_api_gateway_rest_api.example.id
    resource_id   = aws_api_gateway_resource.enddate.id
    http_method   = "GET"
@@ -241,15 +246,15 @@ resource "aws_api_gateway_method" "proxy" {
 
  resource "aws_api_gateway_integration" "lambda" {
    rest_api_id = aws_api_gateway_rest_api.example.id
-   resource_id = aws_api_gateway_method.proxy.resource_id
-   http_method = aws_api_gateway_method.proxy.http_method
+   resource_id = aws_api_gateway_method.fiatget.resource_id
+   http_method = aws_api_gateway_method.fiatget.http_method
 
    integration_http_method = "POST"
    type = "AWS"
    uri = aws_lambda_function.get_data_with_lambda.invoke_arn
    request_templates = {
 
-     "application/json" = <<EOF
+     "application/json" =<<EOF
 {   "stock": "$input.params('stock')",
     "startdate": "$input.params('startdate')",
     "enddate": "$input.params('enddate')"
