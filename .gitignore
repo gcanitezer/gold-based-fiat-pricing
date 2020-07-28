@@ -151,3 +151,7 @@ terraform.tfvars
 *.zip
 *.zip.backup
 Pipfile
+
+
+# react
+/node_modules
