@@ -1,0 +1,8 @@
+pandas==1.1.0
+numpy==1.18.1
+s3fs==0.4.2
+pytz==2020.1
+botocore<1.17.0,>=1.16.26
+boto3~=1.13.0
+jmespath~=0.9.5
+python-dateutil<2.8.1,~=2.6
