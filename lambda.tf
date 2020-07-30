@@ -8,7 +8,7 @@ resource "aws_lambda_function" "lambda-function" {
   filename         = "lambda/packages/lambda_function.zip"
   function_name    = "layered-test"
   role             = aws_iam_role.lambda_execution_iam_role.arn
-  handler          = "main.handle"
+  handler          = "main.handler"
   source_code_hash = data.archive_file.lambda-archive.output_base64sha256
   runtime          = "python3.8"
   timeout          = 15
@@ -17,8 +17,8 @@ resource "aws_lambda_function" "lambda-function" {
 }
 
 resource "aws_lambda_layer_version" "python38-pandas-layer" {
-  filename            = "lambda/packages/Python3-pandas.zip"
+  filename            = "lambda/my-Python36-Pandas23.zip"
   layer_name          = "Python3-pandas"
-  source_code_hash    = filebase64sha256("lambda/packages/Python3-pandas.zip")
-  compatible_runtimes = ["python3.7", "python3.8"]
+  source_code_hash    = filebase64sha256("lambda/my-Python36-Pandas23.zip")
+  compatible_runtimes = ["python3.6", "python3.7", "python3.8"]
 }
