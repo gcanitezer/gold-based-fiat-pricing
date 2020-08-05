@@ -13,12 +13,28 @@ resource "aws_lambda_function" "lambda-function" {
   runtime          = "python3.8"
   timeout          = 15
   memory_size      = 128
-  layers           = [aws_lambda_layer_version.python38-pandas-layer.arn]
+  layers           = [aws_lambda_layer_version.pandas-layer.arn, 
+                      aws_lambda_layer_version.numpy-layer.arn, 
+                      aws_lambda_layer_version.pytz-layer.arn]
 }
 
-resource "aws_lambda_layer_version" "python38-pandas-layer" {
-  filename            = "lambda/my-Python36-Pandas23.zip"
-  layer_name          = "Python3-pandas"
-  source_code_hash    = filebase64sha256("lambda/my-Python36-Pandas23.zip")
+resource "aws_lambda_layer_version" "pandas-layer" {
+  filename            = "lambda/layers/pandas/pandas_layer.zip"
+  layer_name          = "pandas-layer"
+  source_code_hash    = filebase64sha256("lambda/layers/pandas/pandas_layer.zip")
+  compatible_runtimes = ["python3.6", "python3.7", "python3.8"]
+}
+
+resource "aws_lambda_layer_version" "numpy-layer" {
+  filename            = "lambda/layers/numpy/numpy_layer.zip"
+  layer_name          = "numpy-layer"
+  source_code_hash    = filebase64sha256("lambda/layers/numpy/numpy_layer.zip")
+  compatible_runtimes = ["python3.6", "python3.7", "python3.8"]
+}
+
+resource "aws_lambda_layer_version" "pytz-layer" {
+  filename            = "lambda/layers/pytz/pytz_layer.zip"
+  layer_name          = "pytz-layer"
+  source_code_hash    = filebase64sha256("lambda/layers/pytz/pytz_layer.zip")
   compatible_runtimes = ["python3.6", "python3.7", "python3.8"]
 }

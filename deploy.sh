@@ -22,5 +22,13 @@ cd $SCRIPT_DIR
 # Add python code in zip file
 zip -r9 $SCRIPT_DIR/check_file_lambda.zip *.py
 
+# Creating Layers
+#chmod +x lambda/layers/pandas/build_layer.sh
+#./lambda/layers/pandas/build_layer.sh
+#chmod +x lambda/layers/numpy/build_layer.sh
+#./lambda/layers/numpy/build_layer.sh
+#chmod +x lambda/layers/pytz/build_layer.sh
+#./lambda/layers/pytz/build_layer.sh
+
 # Run terraform apply
 terraform apply

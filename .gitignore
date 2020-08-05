@@ -151,3 +151,5 @@ terraform.tfvars
 *.zip
 *.zip.backup
 Pipfile
+
+**/python
