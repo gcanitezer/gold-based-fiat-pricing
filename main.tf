@@ -87,24 +87,6 @@ resource "aws_iam_role" "check_file_lambda" {
 EOF
 }
 
-resource "aws_iam_role" "lambda_execution_iam_role" {
-    name = "lambda_execution_iam_role"
-    assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
 resource "aws_iam_role" "get_data_with_lambda" {
     name = "get_data_with_lambda"
     assume_role_policy = <<EOF
@@ -128,6 +110,7 @@ data "aws_iam_policy_document" "s3-access-ro" {
         actions = [
             "s3:GetObject",
             "s3:ListBucket",
+            "s3:PutObject",
         ]
         resources = [
             "arn:aws:s3:::*",

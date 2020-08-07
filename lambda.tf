@@ -1,3 +1,26 @@
+# If archive file is changed, updates zip to S3 repository
+resource "aws_s3_bucket" "layer_bucket_goldstock" {
+  bucket = "layer-bucket-goldstock"
+  acl = "private"
+  versioning {
+    enabled = false
+  }
+}
+
+resource "aws_s3_bucket_object" "object_lambda_common_layer" {
+  bucket = aws_s3_bucket.layer_bucket_goldstock.bucket
+  key = "lambda_common_layer.zip"
+  source = data.archive_file.layer_zip_lambda_common_layer.output_path
+  depends_on = [
+    data.archive_file.layer_zip_lambda_common_layer]
+}
+
+data "archive_file" "layer_zip_lambda_common_layer" {
+  type        = "zip"
+  source_dir  = "venv/lib/python3.8/site-packages"
+  output_path = "lambda_common_layer.zip"
+}
+
 data "archive_file" "lambda-archive" {
   type        = "zip"
   source_file = "lambda/src/main.py"
@@ -13,28 +36,14 @@ resource "aws_lambda_function" "lambda-function" {
   runtime          = "python3.8"
   timeout          = 15
   memory_size      = 128
-  layers           = [aws_lambda_layer_version.pandas-layer.arn, 
-                      aws_lambda_layer_version.numpy-layer.arn, 
-                      aws_lambda_layer_version.pytz-layer.arn]
+  layers           = [aws_lambda_layer_version.lambda_common_layer.arn]
 }
 
-resource "aws_lambda_layer_version" "pandas-layer" {
-  filename            = "lambda/layers/pandas/pandas_layer.zip"
-  layer_name          = "pandas-layer"
-  source_code_hash    = filebase64sha256("lambda/layers/pandas/pandas_layer.zip")
-  compatible_runtimes = ["python3.6", "python3.7", "python3.8"]
-}
-
-resource "aws_lambda_layer_version" "numpy-layer" {
-  filename            = "lambda/layers/numpy/numpy_layer.zip"
-  layer_name          = "numpy-layer"
-  source_code_hash    = filebase64sha256("lambda/layers/numpy/numpy_layer.zip")
-  compatible_runtimes = ["python3.6", "python3.7", "python3.8"]
-}
-
-resource "aws_lambda_layer_version" "pytz-layer" {
-  filename            = "lambda/layers/pytz/pytz_layer.zip"
-  layer_name          = "pytz-layer"
-  source_code_hash    = filebase64sha256("lambda/layers/pytz/pytz_layer.zip")
-  compatible_runtimes = ["python3.6", "python3.7", "python3.8"]
+resource "aws_lambda_layer_version" "lambda_common_layer" {
+  layer_name = "lambda_common_layer"
+  s3_bucket = aws_s3_bucket_object.object_lambda_common_layer.bucket
+  s3_key = aws_s3_bucket_object.object_lambda_common_layer.key
+  s3_object_version = aws_s3_bucket_object.object_lambda_common_layer.version_id
+  description = "Common layer providing logging"
+  compatible_runtimes = ["python3.8"]
 }
