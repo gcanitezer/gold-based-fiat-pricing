@@ -17,21 +17,39 @@ resource "aws_s3_bucket_object" "object_lambda_common_layer" {
 
 data "archive_file" "layer_zip_lambda_common_layer" {
   type        = "zip"
-  source_dir  = "venv/lib/python3.8/site-packages"
+  source_dir  = "lambda"
   output_path = "lambda_common_layer.zip"
 }
 
 data "archive_file" "lambda-archive" {
   type        = "zip"
-  source_file = "lambda/src/main.py"
-  output_path = "lambda/packages/lambda_function.zip"
+  source_file  = "lambda/src/main.py"
+  output_path = "lambda/packages/main_function.zip"
 }
 
 resource "aws_lambda_function" "lambda-function" {
-  filename         = "lambda/packages/lambda_function.zip"
-  function_name    = "layered-test"
+  filename         = "lambda/packages/main_function.zip"
+  function_name    = "main"
   role             = aws_iam_role.lambda_execution_iam_role.arn
   handler          = "main.handler"
+  source_code_hash = data.archive_file.lambda-archive.output_base64sha256
+  runtime          = "python3.8"
+  timeout          = 15
+  memory_size      = 128
+  layers           = [aws_lambda_layer_version.lambda_common_layer.arn]
+}
+
+data "archive_file" "lambda-archive-yahoo" {
+  type        = "zip"
+  source_file  = "lambda/src/get_data_from_yahoo.py"
+  output_path = "lambda/packages/get_data_from_yahoo.zip"
+}
+
+resource "aws_lambda_function" "lambda-function-get_data_from_yahoo" {
+  filename         = "lambda/packages/get_data_from_yahoo.zip"
+  function_name    = "new_get_data_from_yahoo"
+  role             = aws_iam_role.lambda_execution_iam_role.arn
+  handler          = "get_data_from_yahoo.lambda_handler"
   source_code_hash = data.archive_file.lambda-archive.output_base64sha256
   runtime          = "python3.8"
   timeout          = 15
