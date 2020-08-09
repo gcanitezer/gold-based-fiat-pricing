@@ -1,5 +1,5 @@
 variable "bucket_name" {
-  default = "frontend-bucket"
+  default = "goldstat-frontend-bucket"
 }
 
 resource "aws_s3_bucket" "react_bucket" {
